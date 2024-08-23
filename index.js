@@ -43,6 +43,67 @@ server.on('message', async (msg, rinfo) => {
     server.send([TID,FLAGS, QDCOUNT, ANCOUNT, NSCOUNT, ARCOUNT, domainQuestion, dnsBody], rinfo.port)
 });
 
+
+
+function recordToBytes( recordType, record) {
+    let rBytes = 'c00c';
+
+    rBytes += getRecordTypeHex(recordType);
+
+    rBytes +=  '00' + '01';
+
+    rBytes +=  parseInt(record["ttl"]).toString(16).padStart(8, 0);
+
+    let alphabetDomain = '';
+
+    if(recordType == 'A'){
+        rBytes +=  '00' + '04'; 
+
+        for(let part of record["data"].split('.')){
+            rBytes += parseInt(part).toString(16).padStart(2, 0);
+        }
+    }
+    else if(recordType == 'SOA'){
+        let mname = domainToHex(record["mname"]);
+        let rname = domainToHex(record["rname"])
+        let serial = stringToHex(record["serial"]);
+        let refresh = stringToHex(record["refresh"]);
+        let retry = stringToHex(record["retry"]);
+        let expire = stringToHex(record["expire"])
+        let minimum = stringToHex(record["minimum"]);
+
+        alphabetDomain += mname + rname + serial + refresh + retry + expire + minimum;
+
+    }
+    else{        
+        alphabetDomain = domainToHex(record["data"]);
+    }
+    
+    
+    
+    if (alphabetDomain != ''){
+
+        
+        switch (recordType) {
+            case 'CNAME':
+                alphabetDomain += '00';     
+                break;
+            case 'MX':
+                alphabetDomain = parseInt(record["preference"]).toString(16).padStart(4, 0) + alphabetDomain;
+                break;
+        
+            default:
+                break;
+        }
+        let totalLength = (alphabetDomain.length / 2).toString(16).padStart(4, 0);
+        rBytes += totalLength + alphabetDomain;
+    }
+    
+    return rBytes;
+}
+
+
+
 function buildQuestion(domainParts, recordType) {
     let qBytes = '';
 
@@ -92,4 +153,73 @@ function getDomain(data) {
     }
     let recordType = data.slice(y, y+2);
     return [domainParts, recordType];
+}
+
+
+function getRecordType(data) {
+    let qt;
+    let d =data.toString('hex');
+    switch (d) {
+        case '0001':
+            qt = 'A'
+            break;
+        
+        case '0002':
+            qt = 'NS'
+            break;
+        
+        case '0005':
+            qt = 'CNAME'
+            break;
+
+        case '0006':
+            qt = 'SOA'
+            break;
+
+        case '000c':
+            qt = 'PTR'
+            break;
+
+        case '000f':
+            qt = 'MX'
+            break;
+        case '0010':
+            qt = 'TXT'
+            break;
+        default:
+            break;
+    }
+    
+    return qt;
+}
+
+function getRecordTypeHex(data) {
+    let recordTypeHex;
+    switch (data) {
+        case 'A':
+            recordTypeHex = '0001';
+            break;
+        case 'NS':
+            recordTypeHex = '0002';
+            break;
+        case 'CNAME':
+            recordTypeHex = '0005';
+            break;    
+        case 'SOA':
+            recordTypeHex = '0006';
+            break;            
+        case 'PTR':
+            recordTypeHex = '000c';
+            break; 
+        case 'MX':
+            recordTypeHex = '000f';
+            break;
+        case 'TXT':
+            recordTypeHex = '0010';
+            break;
+        default:
+            break;
+
+    }
+    return recordTypeHex;
 }
