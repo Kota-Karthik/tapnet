@@ -42,3 +42,54 @@ server.on('message', async (msg, rinfo) => {
 
     server.send([TID,FLAGS, QDCOUNT, ANCOUNT, NSCOUNT, ARCOUNT, domainQuestion, dnsBody], rinfo.port)
 });
+
+function buildQuestion(domainParts, recordType) {
+    let qBytes = '';
+
+    for(let part of domainParts){
+        let length = part.length;
+        qBytes +=  length.toString(16).padStart(2, 0);
+        for(let char of part){
+            qBytes +=  char.charCodeAt(0).toString(16);
+        }
+    }
+
+    qBytes += '00';
+
+    qBytes += getRecordTypeHex(recordType)
+
+    qBytes +=  '00' + '01';
+
+    return qBytes;
+}
+
+function getDomain(data) {
+    let state = 0;
+    let expectedLength = 0;
+    let domainString = '';
+    let domainParts = [];
+    let x = 0;
+    let y = 0;
+    for(let pair of data.entries()){
+        if (state == 1){
+            domainString += String.fromCharCode(pair[1]);
+            x++;
+            if (x == expectedLength){
+                domainParts.push(domainString);
+                domainString = '';
+                state = 0;
+                x = 0;
+            }
+            if (pair[1] == 0){
+                break;
+            }
+        }
+        else{
+            state = 1;
+            expectedLength = pair[1];
+        }
+        y++;
+    }
+    let recordType = data.slice(y, y+2);
+    return [domainParts, recordType];
+}
