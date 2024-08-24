@@ -1,8 +1,10 @@
 import dgram from 'dgram';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { processBindFile } from './parser.js';
 
 const server = dgram.createSocket('udp4');
-
-server.bind(53);
+const __filename = fileURLToPath(import.meta.url);
 
 server.on('message', async (msg, rinfo) => {
     let TID = msg.slice(0,2);
@@ -124,6 +126,30 @@ function buildQuestion(domainParts, recordType) {
     return qBytes;
 }
 
+async function getRecords(data){
+    let result = getDomain(data);
+
+    let domain = result[0];
+    let domainName;
+    let askedRecord = '@';
+    if(domain.length > 2){
+        askedRecord = result[0][0];
+        domainName = result[0][1] + '.' + result[0][2]
+    }else{
+        domainName = result[0].join('.');
+    }
+    
+    
+    let qt = getRecordType(result[1])
+    
+
+    let filePath = path.join(path.dirname(__filename), `zones/${domainName}.zone`);
+    let records = await processBindFile(filePath);
+    
+    
+    return [records, qt, result[0], askedRecord]
+    
+} 
 function getDomain(data) {
     let state = 0;
     let expectedLength = 0;
