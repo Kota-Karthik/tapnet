@@ -6,6 +6,8 @@ import { processBindFile } from './parser.js';
 const server = dgram.createSocket('udp4');
 const __filename = fileURLToPath(import.meta.url);
 
+server.bind(53);
+
 server.on('message', async (msg, rinfo) => {
     let TID = msg.slice(0,2);
     let FLAGS = getFlags(msg.slice(2, 4));
@@ -104,8 +106,6 @@ function recordToBytes( recordType, record) {
     return rBytes;
 }
 
-
-
 function buildQuestion(domainParts, recordType) {
     let qBytes = '';
 
@@ -149,7 +149,43 @@ async function getRecords(data){
     
     return [records, qt, result[0], askedRecord]
     
-} 
+}
+
+function getFlags(flags) {
+    let QR = '1';
+
+    let byte1 = flags.slice(0,1);
+    
+    let OPCode = bitsExtract(byte1);
+
+    let AA = '1';
+
+    let TC = '0';
+
+    let RD = '0';
+    
+    // Byte 2
+    let RA = '0';
+
+    let Z = '000';
+
+    let RCODE = '0000';
+    
+    let header1 = QR + OPCode + AA + TC + RD;
+    let header2 = RA + Z + RCODE;
+    
+    return header1 + header2;
+}
+
+
+function bitsExtract(data) {
+    let opcode = '';
+    for(let bit = 1; bit < 5; bit++){
+        opcode += ( (data.toString().charCodeAt())&(1<<bit)).toString();
+    }
+    return opcode
+}
+
 function getDomain(data) {
     let state = 0;
     let expectedLength = 0;
@@ -180,7 +216,6 @@ function getDomain(data) {
     let recordType = data.slice(y, y+2);
     return [domainParts, recordType];
 }
-
 
 function getRecordType(data) {
     let qt;
@@ -248,4 +283,26 @@ function getRecordTypeHex(data) {
 
     }
     return recordTypeHex;
+}
+
+function domainToHex(domain) {
+    let alphabetDomain = '';
+    let alphabetDomainLength = 0;
+    let bytes;
+
+    for (const word of domain.split('.')) {
+        bytes = '';
+        for (const char of word) {
+            bytes += char.charCodeAt().toString(16).padStart(2, 0)
+        }
+        alphabetDomainLength = (bytes.length / 2).toString(16).padStart(2, 0);
+        
+        alphabetDomain += alphabetDomainLength + bytes
+        
+    } 
+    return alphabetDomain;
+}
+
+function stringToHex(string){
+    return parseInt(string).toString(16).padStart(8, 0);
 }
