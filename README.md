@@ -1,8 +1,46 @@
-DNS stands for Domain Name Service which is like the phone book of the Internet. Users access the websites on the Internet through domain names while Web Browsers use IP addresses. DNS turns domain names into numerical IP addresses. For example, if user types example.com in a web browser, a server turns that human readable name to the attached IP address which looks like this 93.184.216.34.
- Before DNS, Stanford Research Institute maintained a file named HOSTS.TXT. The file contained the host names and corresponding numerical address of the computers. As the Internet grew, maintaining a single centralised host file became cumbersome. In 1983, Paul Mockapetris created the Domain Name System which saw refinements over time[\[1\]](https://en.wikipedia.org/wiki/Domain_Name_System#History).
-Web browsing and other internet activities depend upon DNS to provide the relevant information required to connect users to remote hosts. DNS mapping is distributed in a hierarchy of authorities/zones which will be explained later when we get to the recursive DNS resolver.
-This guide came into being as a goal to utilise free time and to understand DNS more deeply. The guides don't describe the whole journey and obviously the server implementation is for educational purposes. Final goal is to implement the toy DNS server in multiple languages. First language of choice is Javscript(Node JS)
-Resources which helped
+# Tapnet - Authoritative DNS Server in Node.js
+
+Tapnet contains the code for the implementation of a basic authoritative DNS server in Node.js (JavaScript). The server allows you to query DNS records and understand the underlying workings of DNS.
+
+## Table of Contents
+- [Introduction](#introduction)
+- [Getting Started](#getting-started)
+- [How DNS Works](#how-dns-works)
+- [Resources](#resources)
+
+## Introduction
+
+DNS (Domain Name Service) is like the phone book of the Internet. Users access websites through domain names, while web browsers use IP addresses. DNS translates domain names into numerical IP addresses, allowing users to reach websites easily. For example, when a user types `example.com` in a web browser, DNS resolves that human-readable name to the corresponding IP address (e.g., `93.184.216.34`).
+
+Before the advent of DNS, the Stanford Research Institute maintained a file named `HOSTS.TXT`, which contained hostnames and their corresponding numerical addresses. However, as the Internet grew, maintaining a single centralized host file became cumbersome. In 1983, Paul Mockapetris created the Domain Name System, which has evolved over time [\[1\]](https://en.wikipedia.org/wiki/Domain_Name_System#History).
+
+This project aims to utilize free time to deepen the understanding of DNS and to create a toy DNS server in multiple programming languages, starting with JavaScript (Node.js).
+
+## Getting Started
+
+To run the DNS server, follow these steps:
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/Kota-Karthik/tapnet
+   cd tapnet
+   ```
+2. **Run the DNS server**:
+    ```bash
+    node index.js
+    ```
+3. **Query the server**:
+    ```bash
+    dig example.com @127.0.0.1 
+    ```
+    
+## How DNS Works
+DNS mapping is distributed in a hierarchy of authorities/zones. This structure allows for efficient management of DNS records and helps to reduce the load on individual servers. A recursive DNS resolver queries multiple authoritative DNS servers to resolve a domain name into an IP address.
+
+The server implementation provided in this project is primarily for educational purposes, helping users understand how DNS operates at a basic level.
+
+## Resources
+The following resources were helpful in developing this project:
  - [howDns](https://github.com/howCodeORG/howDNS)
  - [RFC 1035](https://datatracker.ietf.org/doc/html/rfc1035)
  - [RFC 1034](https://datatracker.ietf.org/doc/html/rfc1034)
